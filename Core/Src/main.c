@@ -142,13 +142,41 @@ int main(void)
   while (1)
   {
 
-	    		  HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
-	    		  HAL_Delay (500);
-	    		  rawValue = HAL_ADC_GetValue (&hadc1);
-	    		  voltage = rawValue * 3.3 / 4095;
+	  switch (a){
+	             case 0:
+	          	   uint8_t Time1 [] = "120000.000";
+	          	   update_gps_time(GPS, Time1);
+
+	          	     HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, HAL_MAX_DELAY );
+	                   HAL_UART_Transmit (&huart2, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
 
 
-	    		  HAL_UART_Transmit ( &huart1, (uint8_t*)USB, sizeof(USB), HAL_MAX_DELAY );
+	          	   a++;
+	          	   HAL_Delay(1000);
+
+
+
+	             case 1:
+	                 	   uint8_t Time2 [] = "120001.000";
+	                 	   update_gps_time(GPS, Time2);
+
+	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, HAL_MAX_DELAY );
+	                 	   HAL_UART_Transmit (&huart2, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
+
+	                 	   a++;
+	                 	   HAL_Delay(1000);
+
+	             case 2:
+	          	           uint8_t Time3 [] = "120002.000";
+	          	           update_gps_time(GPS, Time3);
+	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, HAL_MAX_DELAY );
+	                 	   HAL_UART_Transmit (&huart2, (uint8_t*)GPS, sizeof(GPS) - 1, HAL_MAX_DELAY );
+
+	                 	   HAL_Delay(1000);
+	                 	   a = 0;
+	                 	   break;
+
+	      }
 
 
     /* USER CODE END WHILE */
@@ -162,7 +190,7 @@ int main(void)
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(void)
+void SystemClock_Config(v	oid)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
