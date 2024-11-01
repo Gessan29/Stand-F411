@@ -21,7 +21,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define VOL 6
 #define BUFFER_SIZE 50
 #include "string.h"
 #include <stdio.h>
@@ -53,11 +52,13 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 
-int voltage;
+float voltage;
 uint16_t rawValue;
+char msg [14];
+
 uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,          ,A,A*"; // GLL, version 4.1 and 4.2, NMEA 0183
 uint8_t Priem [BUFFER_SIZE];
-uint8_t USB [];
+
 
 
 /* USER CODE END PV */
@@ -143,12 +144,11 @@ int main(void)
   {
 
 	    		  HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
-	    		  HAL_Delay (500);
 	    		  rawValue = HAL_ADC_GetValue (&hadc1);
 	    		  voltage = rawValue * 3.3 / 4095;
-
-
-	    		  HAL_UART_Transmit ( &huart1, (uint8_t*)USB, sizeof(USB), HAL_MAX_DELAY );
+	    		  HAL_Delay (1000);
+	    		  sprintf(msg, "Voltage:%.3f\r\n", voltage );
+	    		  HAL_UART_Transmit( &huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY );
 
 
     /* USER CODE END WHILE */
