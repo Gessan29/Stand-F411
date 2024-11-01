@@ -25,7 +25,7 @@
 #include "string.h"
 #include <stdio.h>
 int a = 0;
-
+int ADC_counter = 0;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -90,7 +90,15 @@ void update_gps_time (uint8_t GPS[], uint8_t time_str[]){
 	    		   }
 }
 
+void ADC_IN0_Voltage (){
 
+	HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
+		    		  rawValue = HAL_ADC_GetValue (&hadc1);
+		    		  voltage = rawValue * 3.3 / 4095;
+		    		  sprintf(msg, "Voltage:%.3f\r\n", voltage );
+		    		  HAL_UART_Transmit( &huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY );
+
+}
 
 
 /* USER CODE END 0 */
@@ -143,12 +151,10 @@ int main(void)
   while (1)
   {
 
-	    		  HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
-	    		  rawValue = HAL_ADC_GetValue (&hadc1);
-	    		  voltage = rawValue * 3.3 / 4095;
-	    		  HAL_Delay (1000);
-	    		  sprintf(msg, "Voltage:%.3f\r\n", voltage );
-	    		  HAL_UART_Transmit( &huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY );
+	    		  for ( ADC_counter; ADC_counter < 10; ADC_counter++){
+	    			  ADC_IN0_Voltage();
+	    			  HAL_Delay(1000);
+	    		  }
 
 
     /* USER CODE END WHILE */
