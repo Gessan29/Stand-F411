@@ -78,7 +78,7 @@ static void MX_ADC1_Init(void);
 /* USER CODE BEGIN 0 */
 
 
-void update_gps_time (uint8_t GPS[], uint8_t time_str[]){
+void update_gps_time (uint8_t GPS[], uint8_t time_str[]){ // Функция передачи в массив с протоколом NMEA времени в формате ЧЧММСС.ССС
 
 	int c = 0;
 	for (int g = 34; g < 44; g++){
@@ -95,7 +95,7 @@ void ADC_IN0_Voltage (){
 	HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
 		    		  rawValue = HAL_ADC_GetValue (&hadc1);
 		    		  voltage = rawValue * 3.3 / 4095;
-		    		  sprintf(msg, "Voltage:%.3f\r\n", voltage );
+		    		  sprintf(msg, "%.3f\r\n", voltage );
 		    		  HAL_UART_Transmit( &huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY );
 
 }
@@ -151,9 +151,9 @@ int main(void)
   while (1)
   {
 
-	    		  for ( ADC_counter; ADC_counter < 10; ADC_counter++){
+	    		  for ( ADC_counter; ADC_counter < 100; ADC_counter++){
 	    			  ADC_IN0_Voltage();
-	    			  HAL_Delay(1000);
+	    			  //HAL_Delay(10);
 	    		  }
 
 
@@ -249,7 +249,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -276,7 +276,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 230400;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
