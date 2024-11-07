@@ -25,7 +25,6 @@
 #include "string.h"
 #include <stdio.h>
 int a = 0;
-int ADC_counter = 0;
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +53,8 @@ UART_HandleTypeDef huart6;
 
 float voltage;
 uint16_t rawValue;
-char msg [14];
+char msg[7];
+int ADC_counter = 0;
 
 uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,          ,A,A*"; // GLL, version 4.1 and 4.2, NMEA 0183
 uint8_t Priem [BUFFER_SIZE];
@@ -92,12 +92,15 @@ void update_gps_time (uint8_t GPS[], uint8_t time_str[]){ // Функция пе
 
 void ADC_IN0_Voltage (){
 
+	char chel [700];
+	for (int i = 0; i < 99; i++){
 	HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
 		    		  rawValue = HAL_ADC_GetValue (&hadc1);
 		    		  voltage = rawValue * 3.3 / 4095;
 		    		  sprintf(msg, "%.3f\r\n", voltage );
-		    		  HAL_UART_Transmit( &huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY );
-
+		    		  memcpy(&chel[i * 7], msg, 7);
+	}
+	HAL_UART_Transmit(&huart1, (uint8_t*)chel, strlen(chel), HAL_MAX_DELAY);
 }
 
 
@@ -151,10 +154,14 @@ int main(void)
   while (1)
   {
 
-	    		  for ( ADC_counter; ADC_counter < 100; ADC_counter++){
+	    		  for ( ADC_counter; ADC_counter < 1; ADC_counter++){
 	    			  ADC_IN0_Voltage();
-	    			  //HAL_Delay(10);
+
 	    		  }
+	    		  SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BS14);
+	    		  HAL_Delay(300);
+	    		  SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BR14);
+	    		  HAL_Delay(300);
 
 
     /* USER CODE END WHILE */
@@ -249,7 +256,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -276,7 +283,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 230400;
+  huart1.Init.BaudRate = 115200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;

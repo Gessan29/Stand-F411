@@ -1,13 +1,14 @@
 #MicroXplorer Configuration settings - do not modify
 ADC1.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_0
+ADC1.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV2
 ADC1.ContinuousConvMode=ENABLE
 ADC1.EOCSelection=ADC_EOC_SEQ_CONV
-ADC1.IPParameters=Rank-0\#ChannelRegularConversion,master,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,NbrOfConversion,ScanConvMode,InjNumberOfConversion,EOCSelection,ContinuousConvMode
+ADC1.IPParameters=Rank-0\#ChannelRegularConversion,master,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,NbrOfConversionFlag,NbrOfConversion,ScanConvMode,InjNumberOfConversion,EOCSelection,ContinuousConvMode,ClockPrescaler
 ADC1.InjNumberOfConversion=0
 ADC1.NbrOfConversion=1
 ADC1.NbrOfConversionFlag=1
 ADC1.Rank-0\#ChannelRegularConversion=1
-ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_3CYCLES
+ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_15CYCLES
 ADC1.ScanConvMode=DISABLE
 ADC1.master=1
 CAD.formats=
@@ -188,7 +189,7 @@ SH.ADCx_IN6.0=ADC1_IN6,IN6
 SH.ADCx_IN6.ConfNb=1
 SH.ADCx_IN7.0=ADC1_IN7,IN7
 SH.ADCx_IN7.ConfNb=1
-USART1.BaudRate=230400
+USART1.BaudRate=115200
 USART1.IPParameters=VirtualMode,BaudRate
 USART1.VirtualMode=VM_ASYNC
 USART2.IPParameters=VirtualMode
