@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #define VOL 6
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE 52
 #include "string.h"
 #include <stdio.h>
 int a = 0;
@@ -55,7 +55,7 @@ UART_HandleTypeDef huart6;
 
 int voltage;
 uint16_t rawValue;
-uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,          ,A,A*"; // GLL, version 4.1 and 4.2, NMEA 0183
+uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,1235  .000,A,A*\r\n"; // GLL, version 4.1 and 4.2, NMEA 0183
 uint8_t Priem [BUFFER_SIZE];
 uint8_t USB [];
 
@@ -80,7 +80,7 @@ static void MX_ADC1_Init(void);
 void update_gps_time (uint8_t GPS[], uint8_t time_str[]){
 
 	int c = 0;
-	for (int g = 34; g < 44; g++){
+	for (int g = 38; g < 40; g++){
 				   GPS[g] = time_str[c];
 	    			   c++;
 				   if ( c >= 10 ){
@@ -144,11 +144,11 @@ int main(void)
 
 	  switch (a){
 	             case 0:
-	          	   uint8_t Time1 [] = "120000.000";
+	          	   uint8_t Time1 [] = "00";
 	          	   update_gps_time(GPS, Time1);
 
-	          	     HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, HAL_MAX_DELAY );
-	                   HAL_UART_Transmit (&huart2, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
+	          	     HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, 100 );
+	                   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
 
 
 	          	   a++;
@@ -157,20 +157,20 @@ int main(void)
 
 
 	             case 1:
-	                 	   uint8_t Time2 [] = "120001.000";
+	                 	   uint8_t Time2 [] = "01";
 	                 	   update_gps_time(GPS, Time2);
 
-	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, HAL_MAX_DELAY );
-	                 	   HAL_UART_Transmit (&huart2, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
+	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, 100 );
+	                 	   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
 
 	                 	   a++;
 	                 	   HAL_Delay(1000);
 
 	             case 2:
-	          	           uint8_t Time3 [] = "120002.000";
+	          	           uint8_t Time3 [] = "02";
 	          	           update_gps_time(GPS, Time3);
-	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, HAL_MAX_DELAY );
-	                 	   HAL_UART_Transmit (&huart2, (uint8_t*)GPS, sizeof(GPS) - 1, HAL_MAX_DELAY );
+	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, 100 );
+	                 	   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, sizeof(GPS) - 1, HAL_MAX_DELAY );
 
 	                 	   HAL_Delay(1000);
 	                 	   a = 0;
@@ -190,7 +190,7 @@ int main(void)
   * @brief System Clock Configuration
   * @retval None
   */
-void SystemClock_Config(v	oid)
+void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
