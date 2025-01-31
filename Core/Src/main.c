@@ -26,7 +26,6 @@
 #include "string.h"
 #include <stdio.h>
 int a = 0;
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,11 +52,15 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 
-int voltage;
+float voltage;
 uint16_t rawValue;
+char msg[7];
+int ADC_counter = 0;
+
 uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,1235  .000,A,A*\r\n"; // GLL, version 4.1 and 4.2, NMEA 0183
 uint8_t Priem [BUFFER_SIZE];
 uint8_t USB [];
+
 
 
 /* USER CODE END PV */
@@ -77,7 +80,7 @@ static void MX_ADC1_Init(void);
 /* USER CODE BEGIN 0 */
 
 
-void update_gps_time (uint8_t GPS[], uint8_t time_str[]){
+void update_gps_time (uint8_t GPS[], uint8_t time_str[]){ // Функция передачи в массив с протоколом NMEA времени в формате ЧЧММСС.ССС
 
 	int c = 0;
 	for (int g = 38; g < 40; g++){
@@ -90,6 +93,28 @@ void update_gps_time (uint8_t GPS[], uint8_t time_str[]){
 }
 
 
+uint16_t adcSamples[100];
+char chel [701];// массив для хранения 100 точек напряжения аналоговово сигнала с генератора.
+
+void ADC_IN0_Voltage (){
+
+	  HAL_ADC_Start(&hadc1);
+	for (int i = 0; i < 100; i++){
+	//HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
+		  SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BS14);
+		  while(!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
+		  LL_ADC_ClearFlag_EOCS(ADC1);
+			SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BR14);
+		  adcSamples[i] = HAL_ADC_GetValue (&hadc1);
+	}
+	  HAL_ADC_Stop(&hadc1);
+	for (int i = 0; i < 100; i++){
+		    		  voltage = adcSamples[i] * 3.3 / 4095;
+		    		  sprintf(msg, "%.3f\r\n", voltage );
+		    		  memcpy(&chel[i * 7], msg, 7);
+	}
+	HAL_UART_Transmit(&huart1, (uint8_t*)chel, strlen(chel), HAL_MAX_DELAY);
+}
 
 
 /* USER CODE END 0 */
@@ -130,7 +155,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
-  HAL_ADC_Start(&hadc1);
+  //HAL_ADC_Start(&hadc1);
 
 
 
@@ -141,8 +166,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
-	  switch (a){
+       	   switch (a){
 	             case 0:
 	          	   uint8_t Time1 [] = "00";
 	          	   update_gps_time(GPS, Time1);
@@ -175,8 +199,15 @@ int main(void)
 	                 	   HAL_Delay(1000);
 	                 	   a = 0;
 	                 	   break;
+       	   }
+	    		  for ( ADC_counter; ADC_counter < 1; ADC_counter++){
+	    			  ADC_IN0_Voltage();
 
-	      }
+	    		  }
+	    		  //SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BS14);
+	    		  HAL_Delay(1000);
+	    		  ///SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BR14);
+	    		  //HAL_Delay(300);
 
 
     /* USER CODE END WHILE */
@@ -205,7 +236,12 @@ void SystemClock_Config(void)
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 144;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -215,19 +251,15 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
-
-  /** Enables the Clock Security System
-  */
-  HAL_RCC_EnableCSS();
 }
 
 /**
@@ -251,7 +283,7 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
   hadc1.Init.ContinuousConvMode = ENABLE;
@@ -271,7 +303,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
