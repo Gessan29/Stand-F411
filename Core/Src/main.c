@@ -21,16 +21,20 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define VOL 6
-#define BUFFER_SIZE 52
-#include "string.h"
 #include <stdio.h>
-int a = 0;
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include "parser.h"
+#include "hardware.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+#define VOL 6
+#define BUFFER_SIZE_GPS 52
 
+uint8_t rx_byte;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -52,14 +56,13 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 
-float voltage;
+float volt;
 uint16_t rawValue;
 char msg[7];
-int ADC_counter = 0;
-
+int ADC_counter = 1; // 0
+int a = 4; // 0
 uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,1235  .000,A,A*\r\n"; // GLL, version 4.1 and 4.2, NMEA 0183
-uint8_t Priem [BUFFER_SIZE];
-uint8_t USB [];
+uint8_t Priem [BUFFER_SIZE_GPS];
 
 
 
@@ -109,8 +112,8 @@ void ADC_IN0_Voltage (){
 	}
 	  HAL_ADC_Stop(&hadc1);
 	for (int i = 0; i < 100; i++){
-		    		  voltage = adcSamples[i] * 3.3 / 4095;
-		    		  sprintf(msg, "%.3f\r\n", voltage );
+		    		  volt = adcSamples[i] * 3.3 / 4095;
+		    		  //sprintf(msg, "%.3f\r\n", voltage );
 		    		  memcpy(&chel[i * 7], msg, 7);
 	}
 	HAL_UART_Transmit(&huart1, (uint8_t*)chel, strlen(chel), HAL_MAX_DELAY);
@@ -154,11 +157,7 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-
-  //HAL_ADC_Start(&hadc1);
-
-
-
+  HAL_ADC_Start(&hadc1);
 
   /* USER CODE END 2 */
 
@@ -166,13 +165,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+
        	   switch (a){
 	             case 0:
 	          	   uint8_t Time1 [] = "00";
 	          	   update_gps_time(GPS, Time1);
 
-	          	     HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, 100 );
-	                   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
+	          	     HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE_GPS, 100 );
+	                   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE_GPS, HAL_MAX_DELAY );
 
 
 	          	   a++;
@@ -184,8 +185,8 @@ int main(void)
 	                 	   uint8_t Time2 [] = "01";
 	                 	   update_gps_time(GPS, Time2);
 
-	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, 100 );
-	                 	   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE, HAL_MAX_DELAY );
+	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE_GPS, 100 );
+	                 	   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE_GPS, HAL_MAX_DELAY );
 
 	                 	   a++;
 	                 	   HAL_Delay(1000);
@@ -193,21 +194,17 @@ int main(void)
 	             case 2:
 	          	           uint8_t Time3 [] = "02";
 	          	           update_gps_time(GPS, Time3);
-	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE, 100 );
+	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE_GPS, 100 );
 	                 	   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, sizeof(GPS) - 1, HAL_MAX_DELAY );
 
 	                 	   HAL_Delay(1000);
 	                 	   a = 0;
 	                 	   break;
        	   }
+
 	    		  for ( ADC_counter; ADC_counter < 1; ADC_counter++){
 	    			  ADC_IN0_Voltage();
-
 	    		  }
-	    		  //SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BS14);
-	    		  HAL_Delay(1000);
-	    		  ///SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BR14);
-	    		  //HAL_Delay(300);
 
 
     /* USER CODE END WHILE */
@@ -236,12 +233,7 @@ void SystemClock_Config(void)
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 25;
-  RCC_OscInitStruct.PLL.PLLN = 144;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 4;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -251,15 +243,19 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
+
+  /** Enables the Clock Security System
+  */
+  HAL_RCC_EnableCSS();
 }
 
 /**
@@ -283,7 +279,7 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
   hadc1.Init.ContinuousConvMode = ENABLE;
@@ -303,7 +299,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -459,9 +455,34 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+ if (huart->Instance == USART1)
+  {
+	 enum parser_result result;
+	          result = process_rx_byte(&parser, rx_byte);
+	          if (result == PARSER_DONE) {
+	        	  choose_command(parser.buffer, &parser.buffer_length);
+	        	  transmission(&data, &parser);
+	        	  serialize_reply(&data);
+	        	  HAL_UART_Transmit_IT(&huart1, data.buf, data.buf_size);
 
+	          } else if (result == PARSER_ERROR) {
+	        	   parser.state = STATE_SYNC;
 
+	          }
 
+}
+}
+
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART1) {
+    	 uint8_t err_msg[] = "UART ERROR\n";
+    	        HAL_UART_Transmit(&huart1, err_msg, sizeof(err_msg) - 1, 100);
+    	        HAL_UART_Abort(&huart1);
+    	        HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+    }
+}
 
 /* USER CODE END 4 */
 
