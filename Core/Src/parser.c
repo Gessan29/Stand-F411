@@ -106,40 +106,37 @@ void choose_command(uint8_t* buffer, size_t* buffer_length)
     switch (buffer[0])
     {
     case 0:
-        func_0(buffer);
+    	apply_voltage_relay_1(buffer);
         break;
     case 1:
-        func_1(buffer);
+    	test_voltage_4_point(buffer);
         break;
     case 2:
-        func_2(buffer);
+    	test_voltage_current(buffer);
         break;
     case 3:
-        func_3(buffer);
+    	apply_voltage_relay_2(buffer);
         break;
     case 4:
-        func_4(buffer);
+    	test_voltage_11_point(buffer);
         break;
     case 5:
     	*buffer_length = 201;
-        func_5(buffer);
+    	test_corrent_laser(buffer);
         break;
     case 6:
-        func_6(buffer);
+    	test_voltage_peltie(buffer);
         break;
     case 7:
-        func_7(buffer);
+    	apply_voltage_relay_5(buffer);
         break;
     case 8:
-        func_8(buffer);
+    	massage_rs232(buffer);
         break;
     case 9:
-        func_9(buffer);
+    	massage_gps(buffer);
         break;
     }
-//    if (*status != STATUS_OK) {
-//        *value[0] = 0;
-//    }
 }
 
 void transmission(struct for_transfer* data, struct protocol_parser* parser) {

@@ -29,8 +29,7 @@ Core/Src/hardware.o: ../Core/Src/hardware.c ../Core/Inc/hardware.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/stm32f4xx_it.h \
- ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h
+ ../Core/Inc/stm32f4xx_it.h
 ../Core/Inc/hardware.h:
 ../Core/Inc/parser.h:
 ../Core/Inc/hardware.h:
@@ -65,4 +64,3 @@ Core/Src/hardware.o: ../Core/Src/hardware.c ../Core/Inc/hardware.h \
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h:
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 ../Core/Inc/stm32f4xx_it.h:
-../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h:

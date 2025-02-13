@@ -1,0 +1,13 @@
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_adc.h:4290:26:LL_ADC_IsActiveFlag_EOCS	16	static
+../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_ll_adc.h:4343:22:LL_ADC_ClearFlag_EOCS	16	static
+../Core/Src/hardware.c:15:6:test_voltage	16	static
+../Core/Src/hardware.c:30:6:func_0	16	static
+../Core/Src/hardware.c:55:6:func_1	16	static
+../Core/Src/hardware.c:80:6:func_2	24	static
+../Core/Src/hardware.c:108:6:func_3	16	static
+../Core/Src/hardware.c:133:6:func_4	16	static
+../Core/Src/hardware.c:188:6:func_5	224	static
+../Core/Src/hardware.c:210:6:func_6	16	static
+../Core/Src/hardware.c:216:6:func_7	16	static
+../Core/Src/hardware.c:241:6:func_8	24	static
+../Core/Src/hardware.c:249:6:func_9	80	static

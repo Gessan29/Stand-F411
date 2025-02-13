@@ -31,10 +31,9 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define VOL 6
-#define BUFFER_SIZE_GPS 52
 
 uint8_t rx_byte;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -56,16 +55,6 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 
-float volt;
-uint16_t rawValue;
-char msg[7];
-int ADC_counter = 1; // 0
-int a = 4; // 0
-uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,1235  .000,A,A*\r\n"; // GLL, version 4.1 and 4.2, NMEA 0183
-uint8_t Priem [BUFFER_SIZE_GPS];
-
-
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,44 +70,6 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-
-void update_gps_time (uint8_t GPS[], uint8_t time_str[]){ // Функция передачи в массив с протоколом NMEA времени в формате ЧЧММСС.ССС
-
-	int c = 0;
-	for (int g = 38; g < 40; g++){
-				   GPS[g] = time_str[c];
-	    			   c++;
-				   if ( c >= 10 ){
-					   c = 0;
-	    			   }
-	    		   }
-}
-
-
-uint16_t adcSamples[100];
-char chel [701];// массив для хранения 100 точек напряжения аналоговово сигнала с генератора.
-
-void ADC_IN0_Voltage (){
-
-	  HAL_ADC_Start(&hadc1);
-	for (int i = 0; i < 100; i++){
-	//HAL_ADC_PollForConversion (&hadc1, HAL_MAX_DELAY);
-		  SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BS14);
-		  while(!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
-		  LL_ADC_ClearFlag_EOCS(ADC1);
-			SET_BIT(GPIOC ->BSRR, GPIO_BSRR_BR14);
-		  adcSamples[i] = HAL_ADC_GetValue (&hadc1);
-	}
-	  HAL_ADC_Stop(&hadc1);
-	for (int i = 0; i < 100; i++){
-		    		  volt = adcSamples[i] * 3.3 / 4095;
-		    		  //sprintf(msg, "%.3f\r\n", voltage );
-		    		  memcpy(&chel[i * 7], msg, 7);
-	}
-	HAL_UART_Transmit(&huart1, (uint8_t*)chel, strlen(chel), HAL_MAX_DELAY);
-}
-
 
 /* USER CODE END 0 */
 
@@ -157,8 +108,6 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_ADC_Start(&hadc1);
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -166,46 +115,6 @@ int main(void)
   while (1)
   {
 	  HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
-
-       	   switch (a){
-	             case 0:
-	          	   uint8_t Time1 [] = "00";
-	          	   update_gps_time(GPS, Time1);
-
-	          	     HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE_GPS, 100 );
-	                   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE_GPS, HAL_MAX_DELAY );
-
-
-	          	   a++;
-	          	   HAL_Delay(1000);
-
-
-
-	             case 1:
-	                 	   uint8_t Time2 [] = "01";
-	                 	   update_gps_time(GPS, Time2);
-
-	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE_GPS, 100 );
-	                 	   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, BUFFER_SIZE_GPS, HAL_MAX_DELAY );
-
-	                 	   a++;
-	                 	   HAL_Delay(1000);
-
-	             case 2:
-	          	           uint8_t Time3 [] = "02";
-	          	           update_gps_time(GPS, Time3);
-	                 	   HAL_UART_Receive (&huart1, (uint8_t*)Priem, BUFFER_SIZE_GPS, 100 );
-	                 	   HAL_UART_Transmit (&huart1, (uint8_t*)GPS, sizeof(GPS) - 1, HAL_MAX_DELAY );
-
-	                 	   HAL_Delay(1000);
-	                 	   a = 0;
-	                 	   break;
-       	   }
-
-	    		  for ( ADC_counter; ADC_counter < 1; ADC_counter++){
-	    			  ADC_IN0_Voltage();
-	    		  }
-
 
     /* USER CODE END WHILE */
 
@@ -281,15 +190,15 @@ static void MX_ADC1_Init(void)
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.ScanConvMode = ENABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 6;
   hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -300,6 +209,47 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Rank = 2;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Rank = 3;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Rank = 6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -462,6 +412,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	 enum parser_result result;
 	          result = process_rx_byte(&parser, rx_byte);
 	          if (result == PARSER_DONE) {
+	        	  HAL_ADC_Start(&hadc1);
 	        	  choose_command(parser.buffer, &parser.buffer_length);
 	        	  transmission(&data, &parser);
 	        	  serialize_reply(&data);

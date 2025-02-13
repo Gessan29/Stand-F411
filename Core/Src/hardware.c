@@ -7,23 +7,40 @@
  #include "hardware.h"
 #include <stdint.h>
 #include <string.h>
-uint16_t voltage_raw;
-float voltage;
 
-void func_0(uint8_t* buf) // Подставить нужный пин, сейчас PB9
+extern ADC_HandleTypeDef hadc1;
+
+uint16_t vol, tok;
+
+void test_voltage(uint8_t* buf){
+	if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) != HAL_OK) {
+	    buf[0] = STATUS_EXEC_ERROR;
+	} else {
+	    vol = HAL_ADC_GetValue(&hadc1);
+	    HAL_ADC_Stop(&hadc1);
+	    vol = vol * 3300 / 4095;
+
+	    buf[1] = (uint8_t)(vol & 0xFF);
+	    buf[2] = (uint8_t)((vol >> 8) & 0xFF);
+	    buf[0] = STATUS_OK;
+	}
+			return;
+}
+
+void apply_voltage_relay_1(uint8_t* buf) // Подставить нужный пин, сейчас PB9
 {
 	switch (buf[1]) {
 		case 0:
-			SET_BIT(GPIOB->BSRR, GPIO_BSRR_BR9);
-			if (READ_BIT(GPIOB->IDR, GPIO_IDR_ID9) != 0){
+			SET_BIT(RELAY_1_PORT->BSRR, RELAY_0_PIN);
+			if (READ_BIT(RELAY_1_PORT->IDR, RELAY_0_PIN) != 0){
 					buf[0] = STATUS_EXEC_ERROR;
 				} else {
 				    buf[0] = STATUS_OK;
 				}
 			return;
 		case 1:
-			SET_BIT(GPIOB->BSRR, GPIO_BSRR_BS9);
-			if (READ_BIT(GPIOB->IDR, GPIO_IDR_ID9) != 0){
+			SET_BIT(RELAY_1_PORT->BSRR, RELAY_1_PIN);
+			if (READ_BIT(RELAY_1_PORT->IDR, RELAY_1_PIN) != 0){
 					buf[0] = STATUS_OK;
 				} else {
 				    buf[0] = STATUS_EXEC_ERROR;
@@ -35,70 +52,60 @@ void func_0(uint8_t* buf) // Подставить нужный пин, сейч�
 	}
 }
 
-void func_1(uint8_t* buf)
+void test_voltage_4_point(uint8_t* buf)
 {
 	switch (buf[1])
 	{
 	case 1:
-		voltage_raw = HAL_ADC_GetValue(&hadc1);
-		HAL_ADC_Stop(&hadc1);
-		voltage = voltage_raw * 3.3 / 4095;
-		voltage_raw = (uint16_t*)voltage;
-		buf[1] = (uint8_t)(voltage_raw & 0xFF);
-		buf[2] = (uint8_t)(voltage_raw >> 8 & 0xFF);
-		buf[0] = STATUS_OK;;
+		test_voltage(buf);
 		return;
 
 	case 2:
-		voltage = 330;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 3:
-		voltage = 500;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 4:
-		voltage = 600;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 	default:
 		buf[0] = STATUS_INVALID_CMD;
-		break;
+		return;
 	}
 }
 
-void func_2(uint8_t* buf)
+void test_voltage_current(uint8_t* buf)
 {
 	switch (buf[1])
 	{
 	case 0: // voltage
-		voltage = 1200;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 1: // current
-		voltage = 500;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) != HAL_OK) {
+		    buf[0] = STATUS_EXEC_ERROR;
+		} else {
+		uint16_t r_shunt = 100; // шунтирующий резистор для измерения тока 0.1 Om == 100 mOm
+								vol = HAL_ADC_GetValue(&hadc1);
+								HAL_ADC_Stop(&hadc1);
+								vol = vol * 3300 / 4095;
+								tok = vol / r_shunt;
+								buf[1] = (uint8_t)(tok & 0xFF);
+								buf[2] = (uint8_t)(tok >> 8 & 0xFF);
+								buf[0] = STATUS_OK;
+								return;
+		}
 	default:
 		buf[0] = STATUS_INVALID_CMD;
-		break;
+		return;
 	}
 }
 
-void func_3(uint8_t* buf) //Подставить нужный пин, сейчас PB8
+void apply_voltage_relay_2(uint8_t* buf) //Подставить нужный пин, сейчас PB8
 {
 	switch (buf[1]) {
 			case 0:
@@ -123,111 +130,90 @@ void func_3(uint8_t* buf) //Подставить нужный пин, сейча
 		}
 }
 
-void func_4(uint8_t* buf)
+void test_voltage_11_point(uint8_t* buf)
 {
 	switch (buf[1])
 	{
 	case 0:
-		voltage = 120;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
+
 	case 1:
-		voltage = 180;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 2:
-		voltage = 250;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 3:
-		voltage = 550;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 4:
-		voltage = 450;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
+
 	case 5:
-		voltage = 550;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 6:
-		voltage = 550;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
+
 
 	case 7:
-		voltage = 180;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 8:
-		voltage = 250;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
+
 	case 9:
-		voltage = 500;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
 
 	case 10:
-		voltage = 2048;
-		buf[1] = (uint8_t)(voltage & 0xFF);
-		buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-		buf[0] = STATUS_OK;
-		break;
+		test_voltage(buf);
+				return;
+
 	default:
 		buf[0] = STATUS_INVALID_CMD;
-		break;
+		return;
 	}
 }
 
-void func_5(uint8_t* buf)
+void test_corrent_laser(uint8_t* buf)
 {
-	voltage = 0;
-	for (size_t i = 1; i < 201; i += 2)
-	{
-		buf[i] = (uint8_t)(voltage & 0xFF);
-		buf[i + 1] = (uint8_t)(voltage >> 8 & 0xFF);
-		voltage += 10;
-    }
+	if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) != HAL_OK) {
+	    buf[0] = STATUS_EXEC_ERROR;
+	    return;
+	} else {
+	uint16_t adcSamples[100];
+		for (int i = 0; i < 100; i++){
+			while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
+			    adcSamples[i] = HAL_ADC_GetValue(&hadc1);
+			    LL_ADC_ClearFlag_EOCS(ADC1);
+		}
+		  HAL_ADC_Stop(&hadc1);
+		for (int i = 0; i < 100; i++){
+			    		  vol = adcSamples[i] * 3300 / 4095;
+			    		  buf[i * 2 + 1] = (uint8_t)(vol & 0xFF);
+			    		  buf[i * 2 + 2] = (uint8_t)(vol >> 8 & 0xFF);
+		}
 	buf[0] = STATUS_OK;
-
+	}
 }
 
-void func_6(uint8_t* buf)
+void test_voltage_peltie(uint8_t* buf)
 {
-	voltage = 550;
-	buf[1] = (uint8_t)(voltage & 0xFF);
-	buf[2] = (uint8_t)(voltage >> 8 & 0xFF);
-	buf[0] = STATUS_OK;
+	test_voltage(buf);
+			return;
 }
 
-void func_7(uint8_t* buf) //Подставить нужный пин, сейчас PB7
+void apply_voltage_relay_5(uint8_t* buf) //Подставить нужный пин, сейчас PB7
 {
 	switch (buf[1]) {
 			case 0:
@@ -252,19 +238,19 @@ void func_7(uint8_t* buf) //Подставить нужный пин, сейча
 		}
 }
 
-void func_8(uint8_t* buf)
+void massage_rs232(uint8_t* buf)
 {
 	for (int a = 1; a < 5; a++) {
-		buf[a] = 0;
+		buf[a] = 5;
 	}
 	buf[0] = STATUS_OK;
 }
 
-void func_9(uint8_t* buf)
+void massage_gps(uint8_t* buf)
 {
-	buf[2] = 0;
-	buf[3] = 0;
-	buf[4] = 0;
+	uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,1235  .000,A,A*\r\n"; // GLL, version 4.1 and 4.2, NMEA 0183
+	GPS[38] = (buf[1]/ 10) + '0';
+	GPS[39] = (buf[1] % 10) + '0';
 	buf[0] = STATUS_OK;
 }
 

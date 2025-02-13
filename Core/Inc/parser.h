@@ -4,7 +4,6 @@
  *  Created on: Feb 7, 2025
  *
  */
-
 #ifndef PARSER_H
 #define PARSER_H
 
@@ -14,12 +13,10 @@
 #include "main.h"
 #define MAX_DATA_SIZE 201
 #define SYNC_BYTE 0xAA
-#define TIMEOUT_RX 500 // время выполнения команды???
+#define TIMEOUT_RX 500 // время передачи пакета команды
 #define DATA_SIZE_OFFSET 3 // 2 байта crc + код команды
 #define SIZE_PAKET 7 // синхробайт + 2 байта полезных данных + cmd + status + 2 CRC
-// Команды
-#define CMD_GET 0
-#define CMD_SET 1
+#define CRC_INIT 0xffff // для подсчета контрольной суммы CRC
 
 //коды ошибок
 #define STATUS_OK 0
@@ -39,8 +36,6 @@
 #define APPLY_VOLTAGE_5_RL 7 // команда подать лог. 0 или 1 для РАЗМЫКАНИЯ RL3-RL7
 #define MASSAGE_RS232 8 // команда отправки заготовленного пакета по RS232
 #define MASSAGE_NMEA 9 // команда отправки заготовленных пакетов NMEA на GPS через RS232
-
-#define CRC_INIT 0xffff // для подсчета контрольной суммы CRC
 
 enum parser_result {
     PARSER_OK,
@@ -101,7 +96,6 @@ struct value_range {
 
 enum parser_result process_rx_byte(struct protocol_parser *parser, uint8_t byte);
 void serialize_reply(struct for_transfer* data);
-void deserialize_reply(const uint8_t* buf, size_t buf_size, struct for_receiving* priem);
 void choose_command(uint8_t* buffer, size_t* buffer_length);// функия для выбора команды
 void transmission(struct for_transfer* data, struct protocol_parser* parser); // функция для записи из for_transfer во for_receiving
 
