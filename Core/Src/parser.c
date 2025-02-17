@@ -9,20 +9,19 @@
 #include <string.h>
 #include "parser.h"
 
- struct protocol_parser parser;
- struct for_transfer data;
+struct protocol_parser parser;
+struct for_transfer data;
 
-static const uint16_t crc16_table[256]; //??
+static const uint16_t crc16_table[256];
 
 static uint16_t update_crc(uint16_t crc, uint8_t byte)
 {
     return crc16_table[(crc ^ byte) & 0xFF] ^ (crc >> 8);
 }
 
- static uint16_t calculate_crc(const uint8_t* array, int size) {
-    uint16_t crc = CRC_INIT; // #define CRC_INIT 0xffff
-    int i;
-    for (i = 0; i < size; i++) {
+static uint16_t calculate_crc(const uint8_t* array, int size) {
+    uint16_t crc = CRC_INIT;
+    for (int i = 0; i < size; i++) {
         crc = update_crc(crc, array[i]);
     }
     return crc;

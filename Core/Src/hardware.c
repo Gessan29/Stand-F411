@@ -13,11 +13,11 @@ extern ADC_HandleTypeDef hadc1;
 uint16_t vol, tok;
 
 void test_voltage(uint8_t* buf){
-	if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) != HAL_OK) {
+	if (HAL_ADC_PollForConversion(ADC_1, HAL_MAX_DELAY) != HAL_OK) {
 	    buf[0] = STATUS_EXEC_ERROR;
 	} else {
-	    vol = HAL_ADC_GetValue(&hadc1);
-	    HAL_ADC_Stop(&hadc1);
+	    vol = HAL_ADC_GetValue(ADC_1);
+	    HAL_ADC_Stop(ADC_1);
 	    vol = vol * 3300 / 4095;
 
 	    buf[1] = (uint8_t)(vol & 0xFF);
@@ -31,16 +31,16 @@ void apply_voltage_relay_1(uint8_t* buf) // Подставить нужный п
 {
 	switch (buf[1]) {
 		case 0:
-			SET_BIT(RELAY_1_PORT->BSRR, RELAY_0_PIN);
-			if (READ_BIT(RELAY_1_PORT->IDR, RELAY_0_PIN) != 0){
+			SET_BIT(RELAY_PORT->BSRR, RELAY_1_PIN_0);
+			if (READ_BIT(RELAY_PORT->IDR, RELAY_1_PIN_0) != 0){
 					buf[0] = STATUS_EXEC_ERROR;
 				} else {
 				    buf[0] = STATUS_OK;
 				}
 			return;
 		case 1:
-			SET_BIT(RELAY_1_PORT->BSRR, RELAY_1_PIN);
-			if (READ_BIT(RELAY_1_PORT->IDR, RELAY_1_PIN) != 0){
+			SET_BIT(RELAY_PORT->BSRR, RELAY_1_PIN_1);
+			if (READ_BIT(RELAY_PORT->IDR, RELAY_1_PIN_1) != 0){
 					buf[0] = STATUS_OK;
 				} else {
 				    buf[0] = STATUS_EXEC_ERROR;
@@ -86,14 +86,14 @@ void test_voltage_current(uint8_t* buf)
 				return;
 
 	case 1: // current
-		if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) != HAL_OK) {
+		if (HAL_ADC_PollForConversion(ADC_1, HAL_MAX_DELAY) != HAL_OK) {
 		    buf[0] = STATUS_EXEC_ERROR;
 		} else {
-		uint16_t r_shunt = 100; // шунтирующий резистор для измерения тока 0.1 Om == 100 mOm
-								vol = HAL_ADC_GetValue(&hadc1);
-								HAL_ADC_Stop(&hadc1);
+		uint16_t res_shunt = 100; // шунтирующий резистор для измерения тока 0.1 Om == 100 mOm
+								vol = HAL_ADC_GetValue(ADC_1);
+								HAL_ADC_Stop(ADC_1);
 								vol = vol * 3300 / 4095;
-								tok = vol / r_shunt;
+								tok = vol / res_shunt;
 								buf[1] = (uint8_t)(tok & 0xFF);
 								buf[2] = (uint8_t)(tok >> 8 & 0xFF);
 								buf[0] = STATUS_OK;
@@ -109,16 +109,16 @@ void apply_voltage_relay_2(uint8_t* buf) //Подставить нужный п�
 {
 	switch (buf[1]) {
 			case 0:
-				SET_BIT(GPIOB->BSRR, GPIO_BSRR_BR8);
-				if (READ_BIT(GPIOB->IDR, GPIO_IDR_ID8) != 0){
+				SET_BIT(RELAY_PORT->BSRR, RELAY_2_PIN_0);
+				if (READ_BIT(RELAY_PORT->IDR, RELAY_2_PIN_0) != 0){
 						buf[0] = STATUS_EXEC_ERROR;
 					} else {
 					    buf[0] = STATUS_OK;
 					}
 				return;
 			case 1:
-				SET_BIT(GPIOB->BSRR, GPIO_BSRR_BS8);
-				if (READ_BIT(GPIOB->IDR, GPIO_IDR_ID8) != 0){
+				SET_BIT(RELAY_PORT->BSRR, RELAY_2_PIN_1);
+				if (READ_BIT(RELAY_PORT->IDR, RELAY_2_PIN_1) != 0){
 						buf[0] = STATUS_OK;
 					} else {
 					    buf[0] = STATUS_EXEC_ERROR;
@@ -187,17 +187,17 @@ void test_voltage_11_point(uint8_t* buf)
 
 void test_corrent_laser(uint8_t* buf)
 {
-	if (HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY) != HAL_OK) {
+	if (HAL_ADC_PollForConversion(ADC_1, HAL_MAX_DELAY) != HAL_OK) {
 	    buf[0] = STATUS_EXEC_ERROR;
 	    return;
 	} else {
 	uint16_t adcSamples[100];
 		for (int i = 0; i < 100; i++){
 			while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
-			    adcSamples[i] = HAL_ADC_GetValue(&hadc1);
+			    adcSamples[i] = HAL_ADC_GetValue(ADC_1);
 			    LL_ADC_ClearFlag_EOCS(ADC1);
 		}
-		  HAL_ADC_Stop(&hadc1);
+		  HAL_ADC_Stop(ADC_1);
 		for (int i = 0; i < 100; i++){
 			    		  vol = adcSamples[i] * 3300 / 4095;
 			    		  buf[i * 2 + 1] = (uint8_t)(vol & 0xFF);
@@ -217,16 +217,16 @@ void apply_voltage_relay_5(uint8_t* buf) //Подставить нужный п�
 {
 	switch (buf[1]) {
 			case 0:
-				SET_BIT(GPIOB->BSRR, GPIO_BSRR_BR7);
-				if (READ_BIT(GPIOB->IDR, GPIO_IDR_ID7) != 0){
+				SET_BIT(RELAY_PORT->BSRR, RELAY_5_PIN_0);
+				if (READ_BIT(RELAY_PORT->IDR, RELAY_5_PIN_0) != 0){
 						buf[0] = STATUS_EXEC_ERROR;
 					} else {
 					    buf[0] = STATUS_OK;
 					}
 				return;
 			case 1:
-				SET_BIT(GPIOB->BSRR, GPIO_BSRR_BS7);
-				if (READ_BIT(GPIOB->IDR, GPIO_IDR_ID7) != 0){
+				SET_BIT(RELAY_PORT->BSRR, RELAY_5_PIN_1);
+				if (READ_BIT(RELAY_PORT->IDR, RELAY_5_PIN_1) != 0){
 						buf[0] = STATUS_OK;
 					} else {
 					    buf[0] = STATUS_EXEC_ERROR;

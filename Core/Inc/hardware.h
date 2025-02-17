@@ -10,9 +10,14 @@
 
 #include "parser.h"
 
-#define RELAY_1_PORT GPIOB
-#define RELAY_1_PIN (1 << 9)
-#define RELAY_0_PIN (0 << 9)
+#define RELAY_PORT GPIOB
+#define RELAY_1_PIN_1 (1 << 9)
+#define RELAY_1_PIN_0 (0 << 9)
+#define RELAY_2_PIN_1 (1 << 8)
+#define RELAY_2_PIN_0 (0 << 8)
+#define RELAY_5_PIN_1 (1 << 7)
+#define RELAY_5_PIN_0 (0 << 7)
+#define ADC_1 &hadc1
 
 void test_voltage(uint8_t* buf);
 
