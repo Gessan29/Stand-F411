@@ -1,6 +1,6 @@
 ../Core/Src/parser.c:17:17:update_crc	16	static
-../Core/Src/parser.c:22:18:calculate_crc	24	static
-../Core/Src/parser.c:31:6:serialize_reply	32	static
-../Core/Src/parser.c:53:21:process_rx_byte	24	static
-../Core/Src/parser.c:104:6:choose_command	16	static
-../Core/Src/parser.c:145:6:transmission	24	static
+../Core/Src/parser.c:22:17:calculate_crc	24	static
+../Core/Src/parser.c:30:6:serialize_reply	32	static
+../Core/Src/parser.c:52:21:process_rx_byte	24	static
+../Core/Src/parser.c:103:6:choose_command	16	static
+../Core/Src/parser.c:141:6:transmission	24	static

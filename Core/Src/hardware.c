@@ -1,8 +1,5 @@
 /*
  * Файл с функциями непосредственной проверки контрольных точек и ключевых элементов
- *
- *
- *
  */
  #include "hardware.h"
 #include <stdint.h>
@@ -10,41 +7,52 @@
 
 extern ADC_HandleTypeDef hadc1;
 
-uint16_t vol, tok;
+uint16_t vol_raw, vol_average, tok;
 
 void test_voltage(uint8_t* buf){
-	if (HAL_ADC_PollForConversion(ADC_1, HAL_MAX_DELAY) != HAL_OK) {
+	HAL_ADC_Start(&hadc1);
+	if (HAL_ADC_PollForConversion(&hadc1, TIME) != HAL_OK) {
 	    buf[0] = STATUS_EXEC_ERROR;
 	} else {
-	    vol = HAL_ADC_GetValue(ADC_1);
-	    HAL_ADC_Stop(ADC_1);
-	    vol = vol * 3300 / 4095;
+		vol_average = 0;
+		for (int i = 0; i < SAMPLES; i++){
+			while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
+							LL_ADC_ClearFlag_EOCS(ADC1);
+						    vol_raw = HAL_ADC_GetValue(&hadc1);
+						    vol_average += vol_raw;
+		}
+	    HAL_ADC_Stop(&hadc1);
+	    vol_average = vol_average * REFERENCE_VOLTAGE / (ADC_BIT_RATE * SAMPLES);
 
-	    buf[1] = (uint8_t)(vol & 0xFF);
-	    buf[2] = (uint8_t)((vol >> 8) & 0xFF);
+	    buf[1] = (uint8_t)(vol_average & 0xFF);
+	    buf[2] = (uint8_t)((vol_average >> 8) & 0xFF);
 	    buf[0] = STATUS_OK;
 	}
 			return;
 }
 
+void apply_relay(GPIO_TypeDef *PORT, uint32_t PIN){
+	            return(SET_BIT(PORT->BSRR, PIN));
+}
+
 void apply_voltage_relay_1(uint8_t* buf) // Подставить нужный пин, сейчас PB9
 {
 	switch (buf[1]) {
-		case 0:
-			SET_BIT(RELAY_PORT->BSRR, RELAY_1_PIN_0);
-			if (READ_BIT(RELAY_PORT->IDR, RELAY_1_PIN_0) != 0){
-					buf[0] = STATUS_EXEC_ERROR;
-				} else {
-				    buf[0] = STATUS_OK;
-				}
-			return;
-		case 1:
-			SET_BIT(RELAY_PORT->BSRR, RELAY_1_PIN_1);
+		case CLOSE_RELAY:
+			apply_relay(RELAY_PORT, RELAY_1_PIN_0);
 			if (READ_BIT(RELAY_PORT->IDR, RELAY_1_PIN_1) != 0){
-					buf[0] = STATUS_OK;
-				} else {
-				    buf[0] = STATUS_EXEC_ERROR;
-				}
+								buf[0] = STATUS_EXEC_ERROR;
+							} else {
+							    buf[0] = STATUS_OK;
+							}
+			return;
+		case OPEN_RELAY:
+			apply_relay(RELAY_PORT, RELAY_1_PIN_1);
+			if (READ_BIT(RELAY_PORT->IDR, RELAY_1_PIN_1) != 0){
+								buf[0] = STATUS_OK;
+							} else {
+							    buf[0] = STATUS_EXEC_ERROR;
+							}
 			return;
 		default:
 			buf[0] = STATUS_INVALID_CMD;
@@ -56,19 +64,19 @@ void test_voltage_4_point(uint8_t* buf)
 {
 	switch (buf[1])
 	{
-	case 1:
+	case CHECKPOINT_6V_NEG:
 		test_voltage(buf);
 		return;
 
-	case 2:
+	case CHECKPOINT_3_3V:
 		test_voltage(buf);
 				return;
 
-	case 3:
+	case CHECKPOINT_5V:
 		test_voltage(buf);
 				return;
 
-	case 4:
+	case CHECKPOINT_6V:
 		test_voltage(buf);
 				return;
 	default:
@@ -81,19 +89,27 @@ void test_voltage_current(uint8_t* buf)
 {
 	switch (buf[1])
 	{
-	case 0: // voltage
+	case SYPPLY_VOLTAGE:
 		test_voltage(buf);
 				return;
 
-	case 1: // current
-		if (HAL_ADC_PollForConversion(ADC_1, HAL_MAX_DELAY) != HAL_OK) {
+	case SUPPLY_CURRENT:
+		HAL_ADC_Start(&hadc1);
+		if (HAL_ADC_PollForConversion(&hadc1, TIME) != HAL_OK) {
 		    buf[0] = STATUS_EXEC_ERROR;
+		    return;
 		} else {
-		uint16_t res_shunt = 100; // шунтирующий резистор для измерения тока 0.1 Om == 100 mOm
-								vol = HAL_ADC_GetValue(ADC_1);
-								HAL_ADC_Stop(ADC_1);
-								vol = vol * 3300 / 4095;
-								tok = vol / res_shunt;
+		vol_average = 0;
+		uint16_t res_shunt = RES_SHUNT; // шунтирующий резистор для измерения тока 0.1 Om == 100 mOm
+		for (int i = 0; i < SAMPLES; i++){
+			while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
+										LL_ADC_ClearFlag_EOCS(ADC1);
+									    vol_raw = HAL_ADC_GetValue(&hadc1);
+									    vol_average += vol_raw;
+		}
+								HAL_ADC_Stop(&hadc1);
+								vol_average = vol_average * REFERENCE_VOLTAGE / (ADC_BIT_RATE * SAMPLES);
+								tok = vol_average / res_shunt;
 								buf[1] = (uint8_t)(tok & 0xFF);
 								buf[2] = (uint8_t)(tok >> 8 & 0xFF);
 								buf[0] = STATUS_OK;
@@ -108,16 +124,16 @@ void test_voltage_current(uint8_t* buf)
 void apply_voltage_relay_2(uint8_t* buf) //Подставить нужный пин, сейчас PB8
 {
 	switch (buf[1]) {
-			case 0:
-				SET_BIT(RELAY_PORT->BSRR, RELAY_2_PIN_0);
-				if (READ_BIT(RELAY_PORT->IDR, RELAY_2_PIN_0) != 0){
+			case CLOSE_RELAY:
+				apply_relay(RELAY_PORT, RELAY_2_PIN_0);
+				if (READ_BIT(RELAY_PORT->IDR, RELAY_2_PIN_1) != 0){
 						buf[0] = STATUS_EXEC_ERROR;
 					} else {
 					    buf[0] = STATUS_OK;
 					}
 				return;
-			case 1:
-				SET_BIT(RELAY_PORT->BSRR, RELAY_2_PIN_1);
+			case OPEN_RELAY:
+				apply_relay(RELAY_PORT, RELAY_2_PIN_1);
 				if (READ_BIT(RELAY_PORT->IDR, RELAY_2_PIN_1) != 0){
 						buf[0] = STATUS_OK;
 					} else {
@@ -134,48 +150,48 @@ void test_voltage_11_point(uint8_t* buf)
 {
 	switch (buf[1])
 	{
-	case 0:
+	case CHECKPOINT_1_2V:
 		test_voltage(buf);
 				return;
 
-	case 1:
+	case CHECKPOINT_1_8V:
 		test_voltage(buf);
 				return;
 
-	case 2:
+	case CHECKPOINT_2_5V:
 		test_voltage(buf);
 				return;
 
-	case 3:
+	case CHECKPOINT_GPS_5_5V:
 		test_voltage(buf);
 				return;
 
-	case 4:
+	case CHECKPOINT_VREF_ADC_4_5V:
 		test_voltage(buf);
 				return;
 
-	case 5:
+	case CHECKPOINT_5_5VA:
 		test_voltage(buf);
 				return;
 
-	case 6:
+	case CHECKPOINT_5_5VA_NEG:
 		test_voltage(buf);
 				return;
 
 
-	case 7:
+	case CHECKPOINT_1_8VA:
 		test_voltage(buf);
 				return;
 
-	case 8:
+	case CHECKPOINT_OFFSET_2_5V:
 		test_voltage(buf);
 				return;
 
-	case 9:
+	case CHECKPOINT_LASER_5V:
 		test_voltage(buf);
 				return;
 
-	case 10:
+	case CHECKPOINT_VREF_DAC_2_048V:
 		test_voltage(buf);
 				return;
 
@@ -187,24 +203,20 @@ void test_voltage_11_point(uint8_t* buf)
 
 void test_corrent_laser(uint8_t* buf)
 {
-	if (HAL_ADC_PollForConversion(ADC_1, HAL_MAX_DELAY) != HAL_OK) {
-	    buf[0] = STATUS_EXEC_ERROR;
-	    return;
-	} else {
-	uint16_t adcSamples[100];
-		for (int i = 0; i < 100; i++){
+	uint16_t adcSamples[SAMPLES_LASER];
+		for (int i = 0; i < SAMPLES_LASER; i++){
+			HAL_ADC_Start(&hadc1);
 			while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
-			    adcSamples[i] = HAL_ADC_GetValue(ADC_1);
-			    LL_ADC_ClearFlag_EOCS(ADC1);
+					LL_ADC_ClearFlag_EOCS(ADC1);
+					adcSamples[i] = HAL_ADC_GetValue(&hadc1);
 		}
-		  HAL_ADC_Stop(ADC_1);
-		for (int i = 0; i < 100; i++){
-			    		  vol = adcSamples[i] * 3300 / 4095;
-			    		  buf[i * 2 + 1] = (uint8_t)(vol & 0xFF);
-			    		  buf[i * 2 + 2] = (uint8_t)(vol >> 8 & 0xFF);
+	HAL_ADC_Stop(&hadc1);
+		for (int i = 0; i < SAMPLES_LASER; i++){
+			    		  vol_average = adcSamples[i] * REFERENCE_VOLTAGE / ADC_BIT_RATE;
+			    		  buf[i * 2 + 1] = (uint8_t)(vol_average & 0xFF);
+			    		  buf[i * 2 + 2] = (uint8_t)(vol_average >> 8 & 0xFF);
 		}
 	buf[0] = STATUS_OK;
-	}
 }
 
 void test_voltage_peltie(uint8_t* buf)
@@ -216,16 +228,16 @@ void test_voltage_peltie(uint8_t* buf)
 void apply_voltage_relay_5(uint8_t* buf) //Подставить нужный пин, сейчас PB7
 {
 	switch (buf[1]) {
-			case 0:
-				SET_BIT(RELAY_PORT->BSRR, RELAY_5_PIN_0);
-				if (READ_BIT(RELAY_PORT->IDR, RELAY_5_PIN_0) != 0){
+			case CLOSE_RELAY:
+				apply_relay(RELAY_PORT, RELAY_5_PIN_0);
+				if (READ_BIT(RELAY_PORT->IDR, RELAY_5_PIN_1) != 0){
 						buf[0] = STATUS_EXEC_ERROR;
 					} else {
 					    buf[0] = STATUS_OK;
 					}
 				return;
-			case 1:
-				SET_BIT(RELAY_PORT->BSRR, RELAY_5_PIN_1);
+			case OPEN_RELAY:
+				apply_relay(RELAY_PORT, RELAY_5_PIN_1);
 				if (READ_BIT(RELAY_PORT->IDR, RELAY_5_PIN_1) != 0){
 						buf[0] = STATUS_OK;
 					} else {
