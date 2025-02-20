@@ -13,7 +13,7 @@
 #include "main.h"
 #define MAX_DATA_SIZE 201
 #define SYNC_BYTE 0xAA
-#define TIMEOUT_RX 500 // время передачи пакета команды
+#define TIMEOUT_RX 1000 // время передачи пакета команды
 #define DATA_SIZE_OFFSET 3 // 2 байта crc + код команды
 #define SIZE_PAKET 7 // синхробайт + 2 байта полезных данных + cmd + status + 2 CRC
 #define CRC_INIT 0xffff // для подсчета контрольной суммы CRC

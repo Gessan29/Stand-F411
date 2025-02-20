@@ -114,7 +114,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
+	  HAL_UART_Receive_IT(UART_1, &rx_byte, 1);
 	  if (status == STATUS_OK){
 		  enum parser_result result;
 		  	          result = process_rx_byte(&parser, rx_byte);
@@ -122,7 +122,7 @@ int main(void)
 		                  choose_command(parser.buffer, &parser.buffer_length);
 		                  transmission(&data, &parser);
 		                  serialize_reply(&data);
-		                  HAL_UART_Transmit_IT(&huart1, data.buf, data.buf_size);
+		                  HAL_UART_Transmit_IT(UART_1, data.buf, data.buf_size);
 		  	          }
 		  	        else if (result == PARSER_ERROR) {
 		  	        	        	   parser.state = STATE_SYNC;

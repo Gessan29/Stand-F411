@@ -3,4 +3,4 @@
 ../Core/Src/parser.c:30:6:serialize_reply	2
 ../Core/Src/parser.c:52:21:process_rx_byte	14
 ../Core/Src/parser.c:103:6:choose_command	11
-../Core/Src/parser.c:141:6:transmission	3
+../Core/Src/parser.c:142:6:transmission	3

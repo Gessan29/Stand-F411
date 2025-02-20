@@ -3,4 +3,4 @@
 ../Core/Src/parser.c:30:6:serialize_reply	32	static
 ../Core/Src/parser.c:52:21:process_rx_byte	24	static
 ../Core/Src/parser.c:103:6:choose_command	16	static
-../Core/Src/parser.c:141:6:transmission	24	static
+../Core/Src/parser.c:142:6:transmission	24	static

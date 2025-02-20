@@ -42,9 +42,15 @@
 #define SAMPLES_LASER 100
 #define SAMPLES 100
 #define TIME 1000
+#define UART_1 &huart1
+#define UART_2 &huart2
+#define UART_6 &huart6
+#define RS_232 8
+#define GPS_SIZE 49
 
 void test_voltage(uint8_t* buf);
 void apply_relay(GPIO_TypeDef *PORT, uint32_t PIN);
+int compare_arrays(uint8_t arr1[], uint8_t arr2[], size_t size);
 
 void apply_voltage_relay_1(uint8_t* buf);
 void test_voltage_4_point(uint8_t* buf);

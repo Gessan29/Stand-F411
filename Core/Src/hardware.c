@@ -6,7 +6,7 @@
 #include <string.h>
 
 extern ADC_HandleTypeDef hadc1;
-
+extern UART_HandleTypeDef huart1;
 uint16_t vol_raw, vol_average, tok;
 
 void test_voltage(uint8_t* buf){
@@ -204,8 +204,8 @@ void test_voltage_11_point(uint8_t* buf)
 void test_corrent_laser(uint8_t* buf)
 {
 	uint16_t adcSamples[SAMPLES_LASER];
+	HAL_ADC_Start(&hadc1);
 		for (int i = 0; i < SAMPLES_LASER; i++){
-			HAL_ADC_Start(&hadc1);
 			while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
 					LL_ADC_ClearFlag_EOCS(ADC1);
 					adcSamples[i] = HAL_ADC_GetValue(&hadc1);
@@ -250,20 +250,43 @@ void apply_voltage_relay_5(uint8_t* buf) //Подставить нужный п�
 		}
 }
 
+int compare_arrays(uint8_t arr1[], uint8_t arr2[], size_t size){
+	for(int i = 0; i < size; i++){
+		if (arr1[i] != arr2[i]){
+			return 1;
+		}
+	}
+	return 0;
+}
+
 void massage_rs232(uint8_t* buf)
 {
-	for (int a = 1; a < 5; a++) {
-		buf[a] = 5;
+	uint8_t rs_232_tx [RS_232] = "RS_232!";
+	uint8_t rs_232_rx [RS_232];
+	HAL_UART_Transmit(UART_1, rs_232_tx, RS_232, HAL_MAX_DELAY);//TIMEOUT_RX
+	HAL_UART_Receive(UART_1, rs_232_rx, RS_232, HAL_MAX_DELAY);// TIMEOUT_RX
+	if (compare_arrays(rs_232_tx, rs_232_rx, RS_232) == 0){
+		buf[0] = STATUS_OK;
 	}
-	buf[0] = STATUS_OK;
+	else {
+		buf[0] = STATUS_EXEC_ERROR;
+	}
 }
 
 void massage_gps(uint8_t* buf)
 {
-	uint8_t GPS [] = "$GNGLL,5502.49000,N,08256.07600,E,1235  .000,A,A*\r\n"; // GLL, version 4.1 and 4.2, NMEA 0183
-	GPS[38] = (buf[1]/ 10) + '0';
-	GPS[39] = (buf[1] % 10) + '0';
-	buf[0] = STATUS_OK;
+	uint8_t GPS_tx [GPS_SIZE] = "$GNGLL,5502.49000,N,08256.07600,E,1235  .000,A,A*"; // GLL, version 4.1 and 4.2, NMEA 0183
+	uint8_t GPS_rx [GPS_SIZE];
+	GPS_tx[38] = (buf[1]/ 10) + '0';
+	GPS_tx[39] = (buf[1] % 10) + '0';
+	HAL_UART_Transmit(UART_1, GPS_tx, GPS_SIZE, HAL_MAX_DELAY);// TIMEOUT_RX
+	HAL_UART_Receive(UART_1, GPS_rx, GPS_SIZE, HAL_MAX_DELAY);// TIMEOUT_RX
+	if (compare_arrays(GPS_tx, GPS_rx, GPS_SIZE) == 0){
+			buf[0] = STATUS_OK;
+		}
+		else {
+			buf[0] = STATUS_EXEC_ERROR;
+		}
 }
 
 
