@@ -1,8 +1,5 @@
 /*
  *
- *
- *
- *
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,36 +101,37 @@ void choose_command(uint8_t* buffer, size_t* buffer_length)
 {
     switch (buffer[0])
     {
-    case 0:
+    case APPLY_VOLTAGE_RL1:
     	apply_voltage_relay_1(buffer);
         break;
-    case 1:
+    case TEST_VOLTAGE_4_POINT:
     	test_voltage_4_point(buffer);
         break;
-    case 2:
+    case ANALYSIS_VOLTAGE_CORRENT:
     	test_voltage_current(buffer);
         break;
-    case 3:
+    case APPLY_VOLTAGE_RL2:
     	apply_voltage_relay_2(buffer);
         break;
-    case 4:
+    case TEST_VOLTAGE_11_POINT:
     	test_voltage_11_point(buffer);
         break;
-    case 5:
+    case TEST_CORRENT_LASER:
     	*buffer_length = 201;
     	test_corrent_laser(buffer);
         break;
-    case 6:
+    case TEST_VOLTAGE_PELTIE:
+    	*buffer_length = 5;
     	test_voltage_peltie(buffer);
         break;
-    case 7:
+    case APPLY_VOLTAGE_5_RL:
     	apply_voltage_relay_5(buffer);
         break;
-    case 8:
+    case MASSAGE_RS232:
     	*buffer_length = 5;
     	massage_rs232(buffer);
         break;
-    case 9:
+    case MASSAGE_NMEA:
     	massage_gps(buffer);
         break;
     }
