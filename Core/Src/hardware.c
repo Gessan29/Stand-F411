@@ -24,16 +24,14 @@ void test_voltage(uint8_t* buf, uint32_t channel){
 	    	        return;
 	    }
 
-
+	HAL_ADC_Start(&hadc1);
 	for (int i = 0; i < SAMPLES; i++) {
-		HAL_ADC_Start(&hadc1);
 		 while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
 		 	 	 LL_ADC_ClearFlag_EOCS(ADC1);
 		         vol_raw = HAL_ADC_GetValue(&hadc1);
 		         vol_average += vol_raw;
-		         HAL_ADC_Stop(&hadc1);
 		}
-
+	HAL_ADC_Stop(&hadc1);
 
 	vol_average = vol_average * REFERENCE_VOLTAGE / (ADC_BIT_RATE * SAMPLES);
 
@@ -77,7 +75,10 @@ int compare_arrays(uint8_t arr1[], uint8_t arr2[], size_t size){
 	return 0;
 }
 
+
                                                  // функции управления
+
+
 
 void apply_voltage_relay_1(uint8_t* buf) // Подставить нужный пин, сейчас PB9
 {
@@ -109,19 +110,19 @@ void test_voltage_4_point(uint8_t* buf)
 	switch (buf[1])
 	{
 	case CHECKPOINT_6V_NEG:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_3_3V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_5V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_6V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 	default:
 		buf[0] = STATUS_INVALID_CMD;
@@ -135,7 +136,7 @@ void test_voltage_current(uint8_t* buf)
 	switch (buf[1])
 	{
 	case SYPPLY_VOLTAGE:
-		channel = ADC_CHANNEL_1;
+		channel = ADC_SYPPLY_VOLTAGE;
 		test_voltage(buf, channel);
 				return;
 
@@ -143,7 +144,7 @@ void test_voltage_current(uint8_t* buf)
 		    vol_average = 0;
 		    uint32_t res_shunt = RES_SHUNT; // шунтирующий резистор для измерения тока 100 mOm
 			ADC_ChannelConfTypeDef sConfig = {0};
-			sConfig.Channel = ADC_CHANNEL_4;
+			sConfig.Channel = ADC_SUPPLY_CURRENT;
 			sConfig.Rank = 1;
 			sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
 			    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -152,16 +153,15 @@ void test_voltage_current(uint8_t* buf)
 			    	        return;
 			    }
 
-
+			HAL_ADC_Start(&hadc1);
 			for (int i = 0; i < SAMPLES; i++) {
-				 HAL_ADC_Start(&hadc1);
 				 while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
 				 	 	 LL_ADC_ClearFlag_EOCS(ADC1);
 				         vol_raw = HAL_ADC_GetValue(&hadc1);
 				         vol_average += vol_raw;
-				         HAL_ADC_Stop(&hadc1);
 				}
 
+			HAL_ADC_Stop(&hadc1);
 			vol_average = vol_average * REFERENCE_VOLTAGE / (ADC_BIT_RATE * SAMPLES);
 
 			tok = vol_average / res_shunt;
@@ -208,47 +208,47 @@ void test_voltage_11_point(uint8_t* buf)
 	switch (buf[1])
 	{
 	case CHECKPOINT_1_2V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_1_8V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_2_5V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_GPS_5_5V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_VREF_ADC_4_5V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_5_5VA:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_5_5VA_NEG:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_1_8VA:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_OFFSET_2_5V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_LASER_5V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	case CHECKPOINT_VREF_DAC_2_048V:
-		channel = ADC_CHANNEL_0;
+		channel = ADC_MUX;
 		break;
 
 	default:
@@ -261,36 +261,33 @@ void test_voltage_11_point(uint8_t* buf)
 void test_corrent_laser(uint8_t* buf)
 {
 	uint16_t adcSamples[SAMPLES_LASER];
-	vol_average = 0;
-		ADC_ChannelConfTypeDef sConfig = {0};
-		sConfig.Channel = ADC_CHANNEL_5;
-		sConfig.Rank = 1;
-		sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+	ADC_ChannelConfTypeDef sConfig = {0};
+	sConfig.Channel = ADC_LASER;
+	sConfig.Rank = 1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
 		    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
 		    {
 		    	buf[0] = STATUS_EXEC_ERROR;
-		    	        return;
+		    	return;
 		    }
-
-		for (int i = 0; i < SAMPLES; i++) {
-			HAL_ADC_Start(&hadc1);
-			 while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
-			 	 	 LL_ADC_ClearFlag_EOCS(ADC1);
-			         vol_raw = HAL_ADC_GetValue(&hadc1);
-			         vol_average += vol_raw;
-			         HAL_ADC_Stop(&hadc1);
+	HAL_ADC_Start(&hadc1);
+		    for (int i = 0; i < SAMPLES_LASER; i++) {
+			     while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
+			 	 	    LL_ADC_ClearFlag_EOCS(ADC1);
+			 	 	    adcSamples[i] = HAL_ADC_GetValue(&hadc1);
 			}
-		for (int i = 0; i < SAMPLES_LASER; i++){
-			    		  vol_average = adcSamples[i] * REFERENCE_VOLTAGE / ADC_BIT_RATE;
-			    		  buf[i * 2 + 1] = (uint8_t)(vol_average & 0xFF);
-			    		  buf[i * 2 + 2] = (uint8_t)(vol_average >> 8 & 0xFF);
-		}
+		    HAL_ADC_Stop(&hadc1);
+		    for (int i = 0; i < SAMPLES_LASER; i++){
+			     vol_average = adcSamples[i] * REFERENCE_VOLTAGE / ADC_BIT_RATE;
+			     buf[i * 2 + 1] = (uint8_t)(vol_average & 0xFF);
+			     buf[i * 2 + 2] = (uint8_t)(vol_average >> 8 & 0xFF);
+		    }
 	buf[0] = STATUS_OK;
 }
 
 void test_voltage_peltie(uint8_t* buf)
 {
-	channel = ADC_CHANNEL_6;
+	channel = ADC_PELTIE;
 	test_voltage(buf, channel);
 			return;
 }
@@ -324,7 +321,7 @@ void massage_rs232(uint8_t* buf)
 {
 	uint8_t rs_232_tx [RS_232] = "RS_232!";
 	uint8_t rs_232_rx [RS_232];
-	uart_tx_rx(&UART_1, buf, rs_232_tx, rs_232_rx, RS_232);
+	uart_tx_rx(&UART_RS_232, buf, rs_232_tx, rs_232_rx, RS_232);
 
 	if (buf[0] == STATUS_TIMED_OUT){ return; }
 
@@ -342,7 +339,7 @@ void massage_gps(uint8_t* buf)
 	uint8_t gps_rx [GPS_SIZE];
 	gps_tx[38] = (buf[1]/ 10) + '0';
 	gps_tx[39] = (buf[1] % 10) + '0';
-	uart_tx_rx(&UART_1, buf, gps_tx, gps_rx, GPS_SIZE);
+	uart_tx_rx(&UART_GPS, buf, gps_tx, gps_rx, GPS_SIZE);
 
 	if (buf[0] == STATUS_TIMED_OUT){ return; }
 

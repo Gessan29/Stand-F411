@@ -114,7 +114,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_UART_Receive_IT(&UART_1, &rx_byte, 1);
+	  HAL_UART_Receive_IT(&UART_USB, &rx_byte, 1);
 	  if (status == STATUS_OK){
 		  enum parser_result result;
 		  	          result = process_rx_byte(&parser, rx_byte);
@@ -122,7 +122,7 @@ int main(void)
 		                  choose_command(parser.buffer, &parser.buffer_length);
 		                  transmission(&data, &parser);
 		                  serialize_reply(&data);
-		                  HAL_UART_Transmit_IT(&UART_1, data.buf, data.buf_size);
+		                  HAL_UART_Transmit_IT(&UART_USB, data.buf, data.buf_size);
 		  	          }
 		  	        else if (result == PARSER_ERROR) {
 		  	        	        	   parser.state = STATE_SYNC;
@@ -205,8 +205,8 @@ static void MX_ADC1_Init(void)
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = ENABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
@@ -382,17 +382,7 @@ static void MX_GPIO_Init(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
  if (huart->Instance == USART1)
-  {
-	        	  status = STATUS_OK; }
-}
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART1) {
-    	 uint8_t err_msg[] = "UART ERROR\n";
-    	        HAL_UART_Transmit(&huart1, err_msg, sizeof(err_msg) - 1, 100);
-    	        HAL_UART_Abort(&huart1);
-    	        HAL_UART_Receive_IT(&huart1, &rx_byte, 1);
-    }
+     { status = STATUS_OK; }
 }
 
 /* USER CODE END 4 */

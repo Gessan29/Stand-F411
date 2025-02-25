@@ -12,30 +12,30 @@
 #include "hardware.h"
 #include "main.h"
 
-#define MAX_DATA_SIZE 201
-#define SYNC_BYTE 0xAA
-#define DATA_SIZE_OFFSET 3 // 2 байта crc + код команды
-#define SIZE_PAKET 7 // синхробайт + 2 байта полезных данных + cmd + status + 2 CRC
-#define CRC_INIT 0xffff // для подсчета контрольной суммы CRC
+#define MAX_DATA_SIZE 201 // Максимальный размер буфера.
+#define SYNC_BYTE 0xAA // Синхробайт.
+#define DATA_SIZE_OFFSET 3 // 2 байта crc + код команды.
+#define SIZE_PAKET 7 // синхробайт + 2 байта полезных данных + cmd + status + 2 CRC.
+#define CRC_INIT 0xffff // для подсчета контрольной суммы CRC.
 
 //коды ошибок
-#define STATUS_OK 0
-#define STATUS_EXEC_ERROR 1 // Ошибка выполнения команды
-#define STATUS_INVALID_CMD 2 // Несуществующая команда
-#define STATUS_TIMED_OUT 3 // Превышено время выполнения команды
-#define STATUS_INVALID_SIZE 4 // Ошибка размера данных команды
+#define STATUS_OK 0 // Ошибок нет.
+#define STATUS_EXEC_ERROR 1 // Ошибка выполнения команды.
+#define STATUS_INVALID_CMD 2 // Несуществующая команда.
+#define STATUS_TIMED_OUT 3 // Превышено время выполнения команды.
+#define STATUS_INVALID_SIZE 4 // Ошибка размера данных команды.
 
 //Тестовые команды для отладки протокола
-#define APPLY_VOLTAGE_RL1 0 // команда подать лог. 0 или 1 на RL1 для замыкания цепи питания 12В
-#define TEST_VOLTAGE_4_POINT 1 // команда проверка напр. в 4 контрольных точках +6 -6 +5 +3.3В
-#define ANALYSIS_VOLTAGE_CORRENT 2 // команда измерение напр. и тока питания
-#define APPLY_VOLTAGE_RL2 3 // Команда лог. 0 или 1 на RL2 для замыкания R1 и R22
-#define TEST_VOLTAGE_11_POINT 4 // команда проверки напр. в 12 контр. точках
-#define TEST_CORRENT_LASER 5 // Команда измерения формы тока лазерного диода
-#define TEST_VOLTAGE_PELTIE 6 // Команда измерения напряжения элемента Пельтье
-#define APPLY_VOLTAGE_5_RL 7 // команда подать лог. 0 или 1 для РАЗМЫКАНИЯ RL3-RL7
-#define MASSAGE_RS232 8 // команда отправки заготовленного пакета по RS232
-#define MASSAGE_NMEA 9 // команда отправки заготовленных пакетов NMEA на GPS через RS232
+#define APPLY_VOLTAGE_RL1 0 // команда подать лог. 0 или 1 на RL1 для замыкания цепи питания 12В.
+#define TEST_VOLTAGE_4_POINT 1 // команда проверка напр. в 4 контрольных точках +6 -6 +5 +3.3В.
+#define ANALYSIS_VOLTAGE_CORRENT 2 // команда измерение напр. и тока питания.
+#define APPLY_VOLTAGE_RL2 3 // Команда лог. 0 или 1 на RL2 для замыкания R1 и R22.
+#define TEST_VOLTAGE_11_POINT 4 // команда проверки напр. в 12 контр. точках.
+#define TEST_CORRENT_LASER 5 // Команда измерения формы тока лазерного диода.
+#define TEST_VOLTAGE_PELTIE 6 // Команда измерения напряжения элемента Пельтье.
+#define APPLY_VOLTAGE_5_RL 7 // команда подать лог. 0 или 1 для РАЗМЫКАНИЯ RL3-RL7.
+#define MASSAGE_RS232 8 // команда отправки заготовленного пакета по RS232.
+#define MASSAGE_NMEA 9 // команда отправки заготовленных пакетов NMEA на GPS через RS232.
 
 enum parser_result {
     PARSER_OK,
@@ -54,20 +54,20 @@ struct protocol_parser {
         STATE_CRC_H,
     } state;
 
-    uint8_t buffer[MAX_DATA_SIZE];  // Буфер для хранения данных пакета
-    size_t buffer_length;         // Количество принятых байт данных
-    uint16_t data_size;             // Размер полезных данных, полученный из пакета с учетом DATA_SIZE_OFFSET
-    uint8_t cmd;                    // Команда пакета
-    uint16_t crc;                   // Накопленная контрольная сумма
+    uint8_t buffer[MAX_DATA_SIZE];  // Буфер для хранения данных пакета.
+    size_t buffer_length;         // Количество принятых байт данных.
+    uint16_t data_size;             // Размер полезных данных, полученный из пакета с учетом DATA_SIZE_OFFSET.
+    uint8_t cmd;                    // Команда пакета.
+    uint16_t crc;                   // Накопленная контрольная сумма.
 };
 
 struct for_transfer
 {
-    uint8_t* buf;
-    size_t buf_size;
-    uint8_t cmd;
-    uint8_t status;
-    uint8_t* value;
+    uint8_t* buf; // Массив с пакетом байтов.
+    size_t buf_size; // Размер массива buf.
+    uint8_t cmd; // Код команды.
+    uint8_t status; // Код ошибки.
+    uint8_t* value; // Данные команды.
 };
 
 struct value_range {

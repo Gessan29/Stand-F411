@@ -4,7 +4,6 @@
  *  Created on: Feb 7, 2025
  *
  */
-
 #ifndef HARDWARE_H
 #define HARDWARE_H
 
@@ -42,26 +41,33 @@
 //директивы настройки параметров
 
 // директивы установки битов GPIO (для реле):
-#define RELAY_1_PIN_1 (1 << 9)
+#define RELAY_1_PIN_1 (1 << 9) // PB9
 #define RELAY_1_PIN_0 (1 << 25)
 
-#define RELAY_2_PIN_1 (1 << 8)
+#define RELAY_2_PIN_1 (1 << 8) // PB8
 #define RELAY_2_PIN_0 (1 << 24)
 
-#define RELAY_5_PIN_1 (1 << 7)
+#define RELAY_5_PIN_1 (1 << 7) // PB7
 #define RELAY_5_PIN_0 (1 << 23)
+
+// директивы каналов АЦП
+#define ADC_MUX ADC_CHANNEL_0 // Канал АЦП для мультиплексора 1:16.
+#define ADC_SYPPLY_VOLTAGE ADC_CHANNEL_1 // Канал АЦП для измерения напряжения питания.
+#define ADC_SUPPLY_CURRENT ADC_CHANNEL_4 // Канал АЦП для измерения тока питания.
+#define ADC_LASER ADC_CHANNEL_5 // Канал АЦП для измерения формы тока лазерного диода.
+#define ADC_PELTIE ADC_CHANNEL_6 // Канал АЦП для измерения напряжения элемента Пельтье.
 
 #define RELAY_PORT GPIOB // выбор порта ножек GPIO для реле
 #define REFERENCE_VOLTAGE 3300 // опорное напряжение, мВ.
 #define ADC_BIT_RATE 4095 // разрешение АЦП.
 #define RES_SHUNT 100 // номинал шунтирующего резистора, мОм.
-#define SAMPLES_LASER 100 // кол-во измерений сигнала лазера.
+#define SAMPLES_LASER 100 // кол-во измерений сигнала лазерного диода.
 #define SAMPLES 100 // кол-во измерений контрольной точки.
 #define TIMEOUT_RX HAL_MAX_DELAY // время передачи пакета команды
 #define TIME_ADC HAL_MAX_DELAY // время измерения АЦП, мс.
-#define UART_1 huart1 // для выбора uart.
-#define UART_2 huart2 // для выбора uart.
-#define UART_6 huart6 // для выбора uart.
+#define UART_USB huart1 // для выбора uart.
+#define UART_RS_232 huart1 // для выбора uart.
+#define UART_GPS huart1 // для выбора uart.
 #define RS_232 7 // размер передаваемого массива функции massage_rs232.
 #define GPS_SIZE 49 // размер передаваемого массива функции massage_gps.
 
