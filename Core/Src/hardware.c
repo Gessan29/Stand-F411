@@ -7,6 +7,8 @@
 
 extern ADC_HandleTypeDef hadc1;
 extern UART_HandleTypeDef huart1;
+extern UART_HandleTypeDef huart2;
+extern UART_HandleTypeDef huart6;
 
 uint16_t vol_raw;
 uint32_t channel, vol_average, tok;
@@ -330,6 +332,9 @@ void massage_rs232(uint8_t* buf)
 	}
 	else {
 		buf[0] = STATUS_EXEC_ERROR;
+	}
+	for (int i = 1; i < 5; i++){
+		buf[i] = 0;
 	}
 }
 
