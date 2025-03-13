@@ -55,12 +55,14 @@
 #define ADC_SYPPLY_VOLTAGE ADC_CHANNEL_1 // Канал АЦП для измерения напряжения питания.
 #define ADC_SUPPLY_CURRENT ADC_CHANNEL_4 // Канал АЦП для измерения тока питания.
 #define ADC_LASER ADC_CHANNEL_5 // Канал АЦП для измерения формы тока лазерного диода.
-#define ADC_PELTIE ADC_CHANNEL_6 // Канал АЦП для измерения напряжения элемента Пельтье.
+#define ADC_PELTIE_1 ADC_CHANNEL_6 // Канал АЦП для измерения падения напряжения элемента Пельтье.
+#define ADC_PELTIE_2 ADC_CHANNEL_7 // Канал АЦП для измерения падения напряжения элемента Пельтье.
 
 #define RELAY_PORT GPIOB // выбор порта ножек GPIO для реле
 #define REFERENCE_VOLTAGE 3300 // опорное напряжение, мВ.
 #define ADC_BIT_RATE 4095 // разрешение АЦП.
-#define RES_SHUNT 100 // номинал шунтирующего резистора, мОм.
+#define RES_SHUNT_POWER 100 // номинал шунтирующего резистора для тока питания, мОм.
+#define RES_SHUNT_PELTIE 3000 // номинал шунтирующего резистора для тока Пельте, мОм.
 #define SAMPLES_LASER 100 // кол-во измерений сигнала лазерного диода.
 #define SAMPLES 100 // кол-во измерений контрольной точки.
 #define TIMEOUT_RX HAL_MAX_DELAY // время передачи пакета команды

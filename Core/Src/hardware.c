@@ -144,7 +144,7 @@ void test_voltage_current(uint8_t* buf)
 
 	case SUPPLY_CURRENT:
 		    vol_average = 0;
-		    uint32_t res_shunt = RES_SHUNT; // шунтирующий резистор для измерения тока 100 mOm
+		    uint32_t res_shunt = RES_SHUNT_POWER; // шунтирующий резистор для измерения тока 100 mOm
 			ADC_ChannelConfTypeDef sConfig = {0};
 			sConfig.Channel = ADC_SUPPLY_CURRENT;
 			sConfig.Rank = 1;
@@ -289,9 +289,64 @@ void test_corrent_laser(uint8_t* buf)
 
 void test_voltage_peltie(uint8_t* buf)
 {
-	channel = ADC_PELTIE;
-	test_voltage(buf, channel);
-			return;
+	int32_t tok;
+	int32_t vol_average_1 = 0, vol_average_2 = 0;
+	uint32_t res_shunt = RES_SHUNT_PELTIE;
+	ADC_ChannelConfTypeDef sConfig = {0};
+
+	sConfig.Channel = ADC_PELTIE_1;
+	sConfig.Rank = 1;
+	sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+	{
+		buf[0] = STATUS_EXEC_ERROR;
+		return;
+	}
+
+	HAL_ADC_Start(&hadc1);
+	for (int i = 0; i < SAMPLES; i++) {
+		 while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
+				LL_ADC_ClearFlag_EOCS(ADC1);
+				vol_raw = HAL_ADC_GetValue(&hadc1);
+				vol_average_1 += vol_raw;
+	}
+
+	HAL_ADC_Stop(&hadc1);
+	vol_average_1 = vol_average_1 * REFERENCE_VOLTAGE / (ADC_BIT_RATE * SAMPLES);
+
+	sConfig.Channel = ADC_PELTIE_2;
+
+	if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+	{
+		buf[0] = STATUS_EXEC_ERROR;
+		 return;
+	}
+
+	HAL_ADC_Start(&hadc1);
+	for (int i = 0; i < SAMPLES; i++) {
+		 while (!LL_ADC_IsActiveFlag_EOCS(ADC1)) {}
+				LL_ADC_ClearFlag_EOCS(ADC1);
+				vol_raw = HAL_ADC_GetValue(&hadc1);
+				vol_average_2 += vol_raw;
+	}
+
+	HAL_ADC_Stop(&hadc1);
+	vol_average_2 = vol_average_2 * REFERENCE_VOLTAGE / (ADC_BIT_RATE * SAMPLES);
+
+	tok = vol_average_1 - vol_average_2;
+	if (tok < 0) {
+		buf[0] = STATUS_EXEC_ERROR;
+		tok = (vol_average_2 * 1000) / res_shunt; // мкА
+	} else {
+		buf[0] = STATUS_OK;
+		tok = (vol_average_1 * 1000) / res_shunt; // мкА
+	}
+	buf[1] = (uint8_t)(tok & 0xFF);
+    buf[2] = (uint8_t)(tok >> 8 & 0xFF);
+	buf[3] = (uint8_t)(tok >> 16 & 0xFF);
+	buf[4] = (uint8_t)(tok >> 24 & 0xFF);
+	return;
 }
 
 void apply_voltage_relay_5(uint8_t* buf) //Подставить нужный пин, сейчас PB7
