@@ -11,8 +11,16 @@ extern UART_HandleTypeDef huart2;
 extern UART_HandleTypeDef huart6;
 
 uint16_t vol_raw;
-uint32_t channel, vol_average, tok;
+uint32_t vol_average, tok;
                                                // функции подсчета переменных
+
+void set_pins( uint8_t a3, uint8_t a2, uint8_t a1, uint8_t a0 ){
+
+	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, a3 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, a2 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6, a1 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+	 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, a0 ? GPIO_PIN_SET : GPIO_PIN_RESET);
+}
 
 void test_voltage(uint8_t* buf, uint32_t channel){
 	vol_average = 0;
@@ -46,8 +54,8 @@ void test_voltage(uint8_t* buf, uint32_t channel){
 }
 
 void apply_relay(GPIO_TypeDef *PORT, uint32_t PIN){
-	            return(SET_BIT(PORT->BSRR, PIN));
-}
+	            return(SET_BIT(PORT->BSRR, PIN)); }
+
 
 void uart_tx_rx(UART_HandleTypeDef* uart, uint8_t* buf, uint8_t* tx, uint8_t* rx, size_t size){
 	if (HAL_UART_Transmit(uart, tx, size, TIMEOUT_RX) != HAL_OK) {
@@ -82,20 +90,20 @@ int compare_arrays(uint8_t arr1[], uint8_t arr2[], size_t size){
 
 
 
-void apply_voltage_relay_1(uint8_t* buf) // Подставить нужный пин, сейчас PB9
+void apply_voltage_relay_1(uint8_t* buf) // PC14
 {
 	switch (buf[1]) {
 		case CLOSE_RELAY:
-			apply_relay(RELAY_PORT, RELAY_1_PIN_0);
-			if (READ_BIT(RELAY_PORT->IDR, RELAY_1_PIN_1) != 0){
+			apply_relay(RELAY_PORT_C, RELAY_1_PIN_0);
+			if (READ_BIT(RELAY_PORT_C->IDR, RELAY_1_PIN_1) != 0){
 								buf[0] = STATUS_EXEC_ERROR;
 							} else {
 							    buf[0] = STATUS_OK;
 							}
 			return;
 		case OPEN_RELAY:
-			apply_relay(RELAY_PORT, RELAY_1_PIN_1);
-			if (READ_BIT(RELAY_PORT->IDR, RELAY_1_PIN_1) != 0){
+			apply_relay(RELAY_PORT_C, RELAY_1_PIN_1);
+			if (READ_BIT(RELAY_PORT_C->IDR, RELAY_1_PIN_1) != 0){
 								buf[0] = STATUS_OK;
 							} else {
 							    buf[0] = STATUS_EXEC_ERROR;
@@ -109,28 +117,30 @@ void apply_voltage_relay_1(uint8_t* buf) // Подставить нужный п
 
 void test_voltage_4_point(uint8_t* buf)
 {
+	apply_relay(GPIOB, MUX_EN);
 	switch (buf[1])
 	{
 	case CHECKPOINT_6V_NEG:
-		channel = ADC_MUX;
+		set_pins(1, 0, 0 ,0);
 		break;
 
 	case CHECKPOINT_3_3V:
-		channel = ADC_MUX;
+		set_pins(0, 1, 1 ,0);
 		break;
 
 	case CHECKPOINT_5V:
-		channel = ADC_MUX;
+		set_pins(0, 0, 1 ,1);
 		break;
 
 	case CHECKPOINT_6V:
-		channel = ADC_MUX;
+		set_pins(0, 0, 0 ,0);
 		break;
 	default:
 		buf[0] = STATUS_INVALID_CMD;
 		return;
 	}
-	test_voltage(buf, channel);
+	test_voltage(buf, ADC_MUX);
+	apply_relay(GPIOB, MUX_DIS);
 }
 
 void test_voltage_current(uint8_t* buf)
@@ -180,20 +190,20 @@ void test_voltage_current(uint8_t* buf)
 	}
 }
 
-void apply_voltage_relay_2(uint8_t* buf) //Подставить нужный пин, сейчас PB8
+void apply_voltage_relay_2(uint8_t* buf) // PB9
 {
 	switch (buf[1]) {
 			case CLOSE_RELAY:
-				apply_relay(RELAY_PORT, RELAY_2_PIN_0);
-				if (READ_BIT(RELAY_PORT->IDR, RELAY_2_PIN_1) != 0){
+				apply_relay(RELAY_PORT_B, RELAY_2_PIN_0);
+				if (READ_BIT(RELAY_PORT_B->IDR, RELAY_2_PIN_1) != 0){
 						buf[0] = STATUS_EXEC_ERROR;
 					} else {
 					    buf[0] = STATUS_OK;
 					}
 				return;
 			case OPEN_RELAY:
-				apply_relay(RELAY_PORT, RELAY_2_PIN_1);
-				if (READ_BIT(RELAY_PORT->IDR, RELAY_2_PIN_1) != 0){
+				apply_relay(RELAY_PORT_B, RELAY_2_PIN_1);
+				if (READ_BIT(RELAY_PORT_B->IDR, RELAY_2_PIN_1) != 0){
 						buf[0] = STATUS_OK;
 					} else {
 					    buf[0] = STATUS_EXEC_ERROR;
@@ -207,57 +217,59 @@ void apply_voltage_relay_2(uint8_t* buf) //Подставить нужный п�
 
 void test_voltage_11_point(uint8_t* buf)
 {
+	apply_relay(GPIOB, MUX_EN);
 	switch (buf[1])
 	{
 	case CHECKPOINT_1_2V:
-		channel = ADC_MUX;
+		set_pins(1, 0, 1, 1);
 		break;
 
 	case CHECKPOINT_1_8V:
-		channel = ADC_MUX;
+		set_pins(1, 1, 0, 0);
 		break;
 
 	case CHECKPOINT_2_5V:
-		channel = ADC_MUX;
+		set_pins(1, 1, 1, 0);
 		break;
 
 	case CHECKPOINT_GPS_5_5V:
-		channel = ADC_MUX;
+		set_pins(0, 0, 0, 1);
 		break;
 
 	case CHECKPOINT_VREF_ADC_4_5V:
-		channel = ADC_MUX;
+		set_pins(0, 1, 0, 0);
 		break;
 
 	case CHECKPOINT_5_5VA:
-		channel = ADC_MUX;
+		set_pins(0, 1, 0, 1);
 		break;
 
 	case CHECKPOINT_5_5VA_NEG:
-		channel = ADC_MUX;
+		set_pins(1, 0, 0, 1);
 		break;
 
 	case CHECKPOINT_1_8VA:
-		channel = ADC_MUX;
+		set_pins(1, 0, 1, 0);
 		break;
 
 	case CHECKPOINT_OFFSET_2_5V:
-		channel = ADC_MUX;
+		set_pins(1, 1, 0, 1);
 		break;
 
 	case CHECKPOINT_LASER_5V:
-		channel = ADC_MUX;
+		set_pins(0, 0, 1, 0);
 		break;
 
 	case CHECKPOINT_VREF_DAC_2_048V:
-		channel = ADC_MUX;
+		set_pins(1, 1, 1, 1);
 		break;
 
 	default:
 		buf[0] = STATUS_INVALID_CMD;
 		return;
 	}
-	test_voltage(buf, channel);
+	test_voltage(buf, ADC_MUX);
+	apply_relay(GPIOB, MUX_DIS);
 }
 
 void test_corrent_laser(uint8_t* buf)
@@ -289,8 +301,8 @@ void test_corrent_laser(uint8_t* buf)
 
 void test_voltage_peltie(uint8_t* buf)
 {
-	int32_t tok;
-	int32_t vol_average_1 = 0, vol_average_2 = 0;
+
+	int32_t tok, vol_average_1 = 0, vol_average_2 = 0;
 	uint32_t res_shunt = RES_SHUNT_PELTIE;
 	ADC_ChannelConfTypeDef sConfig = {0};
 
@@ -349,20 +361,20 @@ void test_voltage_peltie(uint8_t* buf)
 	return;
 }
 
-void apply_voltage_relay_5(uint8_t* buf) //Подставить нужный пин, сейчас PB7
+void apply_voltage_relay_5(uint8_t* buf) // PC13
 {
 	switch (buf[1]) {
 			case CLOSE_RELAY:
-				apply_relay(RELAY_PORT, RELAY_5_PIN_0);
-				if (READ_BIT(RELAY_PORT->IDR, RELAY_5_PIN_1) != 0){
+				apply_relay(RELAY_PORT_C, RELAY_5_PIN_0);
+				if (READ_BIT(RELAY_PORT_C->IDR, RELAY_5_PIN_1) != 0){
 						buf[0] = STATUS_EXEC_ERROR;
 					} else {
 					    buf[0] = STATUS_OK;
 					}
 				return;
 			case OPEN_RELAY:
-				apply_relay(RELAY_PORT, RELAY_5_PIN_1);
-				if (READ_BIT(RELAY_PORT->IDR, RELAY_5_PIN_1) != 0){
+				apply_relay(RELAY_PORT_C, RELAY_5_PIN_1);
+				if (READ_BIT(RELAY_PORT_C->IDR, RELAY_5_PIN_1) != 0){
 						buf[0] = STATUS_OK;
 					} else {
 					    buf[0] = STATUS_EXEC_ERROR;
