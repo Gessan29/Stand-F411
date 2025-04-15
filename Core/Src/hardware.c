@@ -121,19 +121,19 @@ void test_voltage_4_point(uint8_t* buf)
 	switch (buf[1])
 	{
 	case CHECKPOINT_6V_NEG:
-		set_pins(1, 0, 0 ,0);
+		set_pins(1, 0, 0, 0);
 		break;
 
 	case CHECKPOINT_3_3V:
-		set_pins(0, 1, 1 ,0);
+		set_pins(0, 1, 1, 0);
 		break;
 
 	case CHECKPOINT_5V:
-		set_pins(0, 0, 1 ,1);
+		set_pins(0, 0, 1, 1);
 		break;
 
 	case CHECKPOINT_6V:
-		set_pins(0, 0, 0 ,0);
+		set_pins(0, 0, 0, 0);
 		break;
 	default:
 		buf[0] = STATUS_INVALID_CMD;
@@ -148,7 +148,7 @@ void test_voltage_current(uint8_t* buf)
 	switch (buf[1])
 	{
 	case SYPPLY_VOLTAGE:
-		channel = ADC_SYPPLY_VOLTAGE;
+		uint32_t channel = ADC_SYPPLY_VOLTAGE;
 		test_voltage(buf, channel);
 				return;
 

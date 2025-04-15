@@ -46,7 +46,7 @@ void serialize_reply(struct for_transfer* data) {
 
 }
 
- enum parser_result process_rx_byte(struct protocol_parser *parser, uint8_t byte) {
+enum parser_result process_rx_byte(struct protocol_parser *parser, uint8_t byte) {
     enum parser_result ret = PARSER_OK;
 
     switch (parser->state) {
