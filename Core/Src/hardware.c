@@ -278,7 +278,7 @@ void test_corrent_laser(uint8_t* buf)
 	ADC_ChannelConfTypeDef sConfig = {0};
 	sConfig.Channel = ADC_LASER;
 	sConfig.Rank = 1;
-	sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
+	sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
 		    if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
 		    {
 		    	buf[0] = STATUS_EXEC_ERROR;
