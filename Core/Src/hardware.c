@@ -347,7 +347,7 @@ void test_voltage_peltie(uint8_t* buf)
 	vol_average_2 = vol_average_2 * REFERENCE_VOLTAGE / (ADC_BIT_RATE * SAMPLES);
 
 	tok = vol_average_1 - vol_average_2;
-	if (tok < 0) {
+	if (tok > 0) {
 		buf[0] = STATUS_EXEC_ERROR;
 		tok = (vol_average_2 * 1000) / res_shunt; // мкА
 	} else {

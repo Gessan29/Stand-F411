@@ -27,25 +27,25 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  0000605c  2**0
                   CONTENTS, READONLY
- 12 .debug_info   0000ad47  00000000  00000000  0000608c  2**0
+ 12 .debug_info   0000ad3c  00000000  00000000  0000608c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 00001e22  00000000  00000000  00010dd3  2**0
+ 13 .debug_abbrev 00001e22  00000000  00000000  00010dc8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 000008d8  00000000  00000000  00012bf8  2**3
+ 14 .debug_aranges 000008d8  00000000  00000000  00012bf0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_rnglists 000006c5  00000000  00000000  000134d0  2**0
+ 15 .debug_rnglists 000006c5  00000000  00000000  000134c8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  0001770f  00000000  00000000  00013b95  2**0
+ 16 .debug_macro  0001770f  00000000  00000000  00013b8d  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0000c13a  00000000  00000000  0002b2a4  2**0
+ 17 .debug_line   0000c13a  00000000  00000000  0002b29c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000921f4  00000000  00000000  000373de  2**0
+ 18 .debug_str    000921fb  00000000  00000000  000373d6  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  000c95d2  2**0
+ 19 .comment      00000043  00000000  00000000  000c95d1  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00002620  00000000  00000000  000c9618  2**2
+ 20 .debug_frame  00002620  00000000  00000000  000c9614  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 00000077  00000000  00000000  000cbc38  2**0
+ 21 .debug_line_str 00000077  00000000  00000000  000cbc34  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1706,10 +1706,10 @@ void test_voltage_peltie(uint8_t* buf)
  8000d96:	6a7b      	ldr	r3, [r7, #36]	@ 0x24
  8000d98:	1ad3      	subs	r3, r2, r3
  8000d9a:	62fb      	str	r3, [r7, #44]	@ 0x2c
-	if (tok < 0) {
+	if (tok > 0) {
  8000d9c:	6afb      	ldr	r3, [r7, #44]	@ 0x2c
  8000d9e:	2b00      	cmp	r3, #0
- 8000da0:	da0d      	bge.n	8000dbe <test_voltage_peltie+0x15a>
+ 8000da0:	dd0d      	ble.n	8000dbe <test_voltage_peltie+0x15a>
 		buf[0] = STATUS_EXEC_ERROR;
  8000da2:	687b      	ldr	r3, [r7, #4]
  8000da4:	2201      	movs	r2, #1
@@ -2036,7 +2036,7 @@ void massage_gps(uint8_t* buf)
  8000fc6:	bdb0      	pop	{r4, r5, r7, pc}
  8000fc8:	080048ac 	.word	0x080048ac
  8000fcc:	cccccccd 	.word	0xcccccccd
- 8000fd0:	20000160 	.word	0x20000160
+ 8000fd0:	200000d0 	.word	0x200000d0
 
 08000fd4 <main>:
 /**
